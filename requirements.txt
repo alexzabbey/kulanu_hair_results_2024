@@ -1,0 +1,6 @@
+pydeck
+streamlit
+pandas
+geopandas
+shapely
+altair
