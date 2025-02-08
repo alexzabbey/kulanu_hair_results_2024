@@ -37,8 +37,12 @@ h1 > div, h2 > div,h3 > div,  h4, h5, h6, p{
 
 def absolute_map(display):
     if nei := ("שכונות" in display):
-        year = display.split(" ")[1]
-        gdf = pd.DataFrame(gpd.read_file(f"results_{year}_by_neighborhood.geojson"))
+        if(display == "שכונות קול העיר"):
+            gdf = pd.DataFrame(gpd.read_file("kol_results_2024_by_neighborhood.geojson"))
+        else:
+            year = display.split(" ")[1]
+            gdf = pd.DataFrame(gpd.read_file(f"results_{year}_by_neighborhood.geojson"))
+        
         gdf["fill"] = gdf["fill"].apply(lambda x: [x * 255 for x in mcolors.to_rgb(x)])
         gdf["geometry"] = gdf["geometry"].apply(lambda x: list(x.exterior.coords))
         layer = pdk.Layer(
@@ -68,6 +72,20 @@ def absolute_map(display):
             pickable=True,
             auto_highlight=True,
         )
+    elif display == "אשכולות קול העיר":
+        eshkolot = gpd.read_file("kol_results_2024_by_eshkol.geojson")
+        eshkolot["longitude"] = eshkolot["geometry"].apply(lambda x: x.coords[0][0])
+        eshkolot["latitude"] = eshkolot["geometry"].apply(lambda x: x.coords[0][1])
+        layer = pdk.Layer(
+            "ScatterplotLayer",
+            eshkolot,
+            get_position=["longitude", "latitude"],
+            get_fill_color=[255, 0, 0],
+            get_radius=100,
+            pickable=True,
+            auto_highlight=True,
+        )
+
     datum = "neighborhood" if nei else "name"
     field = "שכונה" if nei else "אשכול"
 
@@ -125,7 +143,7 @@ st.write(
     "מפה של כמות הקולות האבסולוטית בכל שכונה. שכונות שלא מופיעות הן כאלה שלא היו בהן אשכולות קלפיות"
 )
 year = st.radio(
-    "בחרו", ["שכונות 2024", "אשכולות 2024", "שכונות 2018"], index=0, horizontal=True
+    "בחרו", ["שכונות 2024", "אשכולות 2024", "שכונות 2018", "אשכולות קול העיר", "שכונות קול העיר"], index=0, horizontal=True
 )
 st.pydeck_chart(absolute_map(year))
 st.write("---")
